@@ -21,6 +21,11 @@ on:
         required: true
         type: string
 
+      kernel_tag:
+        description: "Optional kernel/common release tag to pin (e.g. android14-6.1-2025-08_r8). Blank = use manifest branch."
+        required: false
+        type: string
+
       root_manager:
         description: "Root Environment"
         required: false
@@ -241,19 +246,24 @@ jobs:
           rm -rf kernel_workspace && mkdir -p kernel_workspace && cd kernel_workspace
           repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" --depth=1
 
-          # Pin common/ to the exact GKI release tag matching this device's kernel.
-          # Google deprecated the android14-6.1-2024-10 branch, so the manifest's
-          # default revision no longer resolves. Override it with the release tag.
-          KERNEL_TAG="android14-6.1-2024-10_r15"
-          mkdir -p .repo/local_manifests
-          cat > .repo/local_manifests/0001-common-tag.xml <<EOF
+          # Pin common/ to an exact GKI release tag when provided.
+          # Google moves older android14-6.1-YYYY-MM branches out of refs/heads,
+          # so the manifest's default revision may no longer resolve. When
+          # kernel_tag is supplied, override it with the release tag.
+          KERNEL_TAG="${{ inputs.kernel_tag }}"
+          if [ -n "$KERNEL_TAG" ]; then
+            mkdir -p .repo/local_manifests
+            cat > .repo/local_manifests/0001-common-tag.xml <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <manifest>
             <remove-project name="kernel/common" />
             <project path="common" name="kernel/common" revision="refs/tags/$KERNEL_TAG" remote="aosp" />
           </manifest>
           EOF
-          echo ">>> Pinned kernel/common to tag: $KERNEL_TAG"
+            echo ">>> Pinned kernel/common to tag: $KERNEL_TAG"
+          else
+            echo ">>> No kernel_tag provided; using manifest branch revision."
+          fi
 
           MAX_RETRIES=3
           for i in $(seq 1 $MAX_RETRIES); do
@@ -274,8 +284,10 @@ jobs:
 
           # Defensive: ensure common/ is exactly on the requested tag
           cd common
-          git fetch --depth=1 origin "refs/tags/$KERNEL_TAG" 2>/dev/null || true
-          git checkout -f "$KERNEL_TAG" 2>/dev/null || git checkout -f FETCH_HEAD
+          if [ -n "$KERNEL_TAG" ]; then
+            git fetch --depth=1 origin "refs/tags/$KERNEL_TAG" 2>/dev/null || true
+            git checkout -f "$KERNEL_TAG" 2>/dev/null || git checkout -f FETCH_HEAD
+          fi
 
           # Capture the PURE Google hash AND the official Unix timestamp
           echo "OFFICIAL_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
