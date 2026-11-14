@@ -37,6 +37,7 @@ if [ "$BASE_VER" != "5.10" ] && [ -f "tools/bazel" ]; then
       --action_env=KLEAF_KERNEL_BUILD_VERSION="-g$OFFICIAL_HASH${KMI_AB:+-ab$KMI_AB}" \
       --action_env=KLEAF_SKIP_ABI_CHECKS=true \
       --action_env=KLEAF_USER=android-build \
+      --action_env=BUILD_NUMBER="${KMI_AB:-}" \
       //common:kernel_aarch64_dist \
       -- \
       --destdir=out/dist
