@@ -5,6 +5,7 @@ set -euo pipefail
 ENABLE_NOMOUNT=${ENABLE_NOMOUNT:-false}
 ENABLE_NET_OPTS=${ENABLE_NET_OPTS:-false}
 BASE_VER=${BASE_VER:-}
+KMI_AB=${KMI_AB:-}
 
 echo "=== Initializing Execution Engine ==="
 
@@ -32,8 +33,8 @@ if [ "$BASE_VER" != "5.10" ] && [ -f "tools/bazel" ]; then
     tools/bazel run --config=stamp \
       $TRIM_FLAGS \
       --action_env=SOURCE_DATE_EPOCH="$OFFICIAL_DATE" \
-      --action_env=STABLE_BUILD_VERSION="-g$OFFICIAL_HASH" \
-      --action_env=KLEAF_KERNEL_BUILD_VERSION="-g$OFFICIAL_HASH" \
+      --action_env=STABLE_BUILD_VERSION="-g$OFFICIAL_HASH${KMI_AB:+-ab$KMI_AB}" \
+      --action_env=KLEAF_KERNEL_BUILD_VERSION="-g$OFFICIAL_HASH${KMI_AB:+-ab$KMI_AB}" \
       --action_env=KLEAF_SKIP_ABI_CHECKS=true \
       --action_env=KLEAF_USER=android-build \
       //common:kernel_aarch64_dist \

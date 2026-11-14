@@ -26,6 +26,11 @@ on:
         required: false
         type: string
 
+      kmi_ab:
+        description: "Optional KMI/AB number to append to the kernel version (e.g. 14219743 -> -ab14219743)."
+        required: false
+        type: string
+
       root_manager:
         description: "Root Environment"
         required: false
@@ -426,6 +431,7 @@ jobs:
           ENABLE_NOMOUNT: ${{ inputs.enable_nomount }}
           ENABLE_NET_OPTS: ${{ inputs.enable_net_opts }}
           ROOT_MANAGER: ${{ inputs.root_manager }}
+          KMI_AB: ${{ inputs.kmi_ab }}
         run: |
           # Injecting the REAL Google identity into the script session
           OFFICIAL_HASH=${{ env.OFFICIAL_HASH }} \
