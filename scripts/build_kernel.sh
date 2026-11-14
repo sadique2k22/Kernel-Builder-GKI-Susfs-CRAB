@@ -29,6 +29,12 @@ if [ "$BASE_VER" != "5.10" ] && [ -f "tools/bazel" ]; then
         TRIM_FLAGS="--notrim"
     fi
     
+    # Export BUILD_NUMBER so scripts/setlocalversion appends -ab<KMI> at the CI level
+    if [ -n "${KMI_AB:-}" ]; then
+        export BUILD_NUMBER="$KMI_AB"
+        echo ">>> BUILD_NUMBER set to $BUILD_NUMBER (expect -ab$KMI_AB suffix)"
+    fi
+
     # Enforce standard sandboxing, disable trimming dynamically, and inject MAKEFLAGS
     tools/bazel run --config=stamp \
       $TRIM_FLAGS \
